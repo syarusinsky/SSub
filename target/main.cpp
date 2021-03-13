@@ -10,6 +10,9 @@
 #include "MidiHandler.hpp"
 #include "SSubVoiceManager.hpp"
 
+// TODO temp stuff, get it outta hereee!
+#include "ExponentialResponse.hpp"
+
 // to disassemble -- arm-none-eabi-objdump -S --disassemble main_debug.elf > disassembled.s
 
 #define SYS_CLOCK_FREQUENCY 64000000
@@ -202,6 +205,9 @@ int main(void)
 	LLPD::usart_init( USART_NUM::USART_3, USART_WORD_LENGTH::BITS_8, USART_PARITY::EVEN, USART_CONF::TX_AND_RX,
 				USART_STOP_BITS::BITS_1, SYS_CLOCK_FREQUENCY, 31250 );
 
+	// TODO temp stuff, get it outta hereee!
+	ExponentialResponse linearToLog;
+
 	lilKSSetupComplete = true;
 	keepBlinking = true;
 
@@ -225,8 +231,10 @@ int main(void)
 		// TODO very temp stuff, fix this with IPotEventListener, IButtonEventListener, ect
 		LLPD::adc_perform_conversion_sequence();
 		float newCutoffFreq = static_cast<float>(LLPD::adc_get_channel_value(EFFECT1_ADC_CHANNEL)) * (1.0f/4095.0f) * 20000.0f;
+		newCutoffFreq = linearToLog.response( newCutoffFreq, 0.0f, 20000.0f );
 		voiceManager.setCutoffFreq( newCutoffFreq );
 		float newResonance = static_cast<float>(LLPD::adc_get_channel_value(EFFECT2_ADC_CHANNEL)) * (1.0f/4095.0f) * 3.5f;
+		newResonance = linearToLog.response( newResonance, 0.0f, 3.5f );
 		voiceManager.setResonance( newResonance );
 
 		// LLPD::usart_log_int( USART_NUM::USART_3, "POT 1 VALUE: ", LLPD::adc_get_channel_value(EFFECT1_ADC_CHANNEL) );
